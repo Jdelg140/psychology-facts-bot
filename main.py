@@ -32,7 +32,7 @@ Output ONLY valid JSON (no markdown, no extra text) with exactly this structure:
 Topic: Extremely surprising real psychology facts that make people go "wow".
 """
 
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 response = model.generate_content(
     prompt,
