@@ -21,9 +21,10 @@ jobs:
       - name: Install system dependencies (critical for MoviePy)
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg libsm6 libxext6 libxrender-dev libglib2.0-0 imagemagick
-          # Allow ImageMagick to use text rendering (TextClip)
+          sudo apt-get install -y ffmpeg libsm6 libxext6 libxrender-dev libglib2.0-0 imagemagick fonts-dejavu-core
+          # Relax ImageMagick policy so TextClip can render text
           sudo sed -i 's/none/read,write/g' /etc/ImageMagick-6/policy.xml || true
+          sudo sed -i 's/none/read,write/g' /etc/ImageMagick-7/policy.xml || true
 
       - name: Install Python packages
         run: |
