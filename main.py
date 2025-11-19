@@ -6,6 +6,8 @@ from gtts import gTTS
 from moviepy.editor import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip
 import google.generativeai as genai
 
+from PIL import Image
+Image.ANTIALIAS = Image.LANCZOS
 # ====================== CONFIGURATION ======================
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 PEXELS_API_KEY = os.environ["PEXELS_API_KEY"]
