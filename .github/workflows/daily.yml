@@ -2,7 +2,7 @@ name: Daily Psychology Short
 
 on:
   schedule:
-    - cron: '0 10 * * *'  # Every day at 10 AM UTC
+    - cron: '0 10 * * *'
   workflow_dispatch:
 
 jobs:
@@ -16,11 +16,14 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           sudo apt update
           sudo apt install ffmpeg imagemagick -y
-          pip install google-generativeai gtts moviepy requests
+
+      - name: Install Python dependencies
+        run: |
+          pip install google-generativeai gtts moviepy requests google-auth-oauthlib google-api-python-client google-auth
 
       - name: Run generator
         env:
@@ -28,10 +31,47 @@ jobs:
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: python main.py
 
-      - name: Upload video as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: daily-psychology-short
-          path: |
-            psychology_short.mp4
-            metadata.txt
+      - name: Auto-upload to YouTube
+        env:
+          YOUTUBE_TOKEN: ${{ secrets.YOUTUBE_TOKEN }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from google.oauth2.credentials import Credentials
+          from google.auth.transport.requests import Request
+          from googleapiclient.discovery import build
+          from googleapiclient.http import MediaFileUpload
+
+          creds = Credentials.from_authorized_user_info(json.loads(os.environ["YOUTUBE_TOKEN"]))
+          if creds.expired and creds.refresh_token:
+              creds.refresh(Request())
+
+          youtube = build("youtube", "v3", credentials=creds)
+
+          with open("metadata.txt") as f:
+              lines = f.readlines()
+              title = lines[0].replace("Title: ", "").strip()
+              description = lines[1].replace("Description: ", "").strip() + "\n" + "".join(lines[2:])
+
+          request_body = {
+              "snippet": {
+                  "title": title,
+                  "description": description,
+                  "tags": ["psychology", "facts", "shorts", "mindblown", "selfimprovement", "viral"],
+                  "categoryId": "24"
+              },
+              "status": {
+                  "privacyStatus": "public",
+                  "selfDeclaredMadeForKids": False
+              }
+          }
+
+          media = MediaFileUpload("psychology_short.mp4", chunksize=-1, resumable=True)
+          response = youtube.videos().insert(
+              part="snippet,status",
+              body=request_body,
+              media_body=media
+          ).execute()
+
+          print(f"Uploaded! https://youtube.com/shorts/{response['id']}")
+          PY
