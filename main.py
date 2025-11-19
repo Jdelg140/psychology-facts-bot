@@ -3,7 +3,6 @@ import json
 import random
 import requests
 from gtts import gTTS
-from moviepy.editor import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip
 import google.generativeai as genai
 
 # ====================== CONFIGURATION ======================
