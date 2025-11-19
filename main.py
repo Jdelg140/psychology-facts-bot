@@ -3,6 +3,7 @@ import json
 import random
 import requests
 from gtts import gTTS
+from moviepy.editor import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip
 import google.generativeai as genai
 
 # ====================== CONFIGURATION ======================
@@ -32,7 +33,7 @@ Output ONLY valid JSON (no markdown, no extra text) with exactly this structure:
 Topic: Extremely surprising real psychology facts that make people go "wow".
 """
 
-model = genai.GenerativeModel("gemini-2.5-flash")
+model = genai.GenerativeModel("gemini-2.5-flash")  # Updated to current stable model
 
 response = model.generate_content(
     prompt,
@@ -129,7 +130,7 @@ clips.append(title_clip)
 time_per_fact = duration / len(data["facts"])
 for i, fact in enumerate(data["facts"]):
     txt = TextClip(fact.upper(), fontsize=68, color="white", font="Arial-Bold",
-                   stroke_color="black", stroke_width=5, size=(980, None), method="center")
+                   stroke_color="black", stroke_width=5, size=(980, None), method="center", method="label")
     txt = txt.set_position("center")
     txt = txt.set_start(i * time_per_fact + 3)  # start facts after title
     txt = txt.set_duration(time_per_fact + 2)  # slight overlap for smooth feel
