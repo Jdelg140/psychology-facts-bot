@@ -149,7 +149,7 @@ for i, fact in enumerate(data["facts"]):
     clips.append(fact_clip)
 
 # ====================== EXPORT ======================
-final = CompositeVideoClip(clips).set_duration(duration)
+final = CompositeVideoClip(clips)   # no set_duration here
 final.write_videofile(
     "psychology_short.mp4",
     fps=30,
