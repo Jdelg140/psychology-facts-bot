@@ -112,17 +112,17 @@ title = TextClip(
     data["title"].upper(),
     fontsize=82,
     color="white",
-    font="Arial-Bold",
+    font="DejaVu-Sans-Bold",   # reliable on Ubuntu after fonts-dejavu-core
     stroke_color="black",
     stroke_width=6,
-    size=(950, None),  # max width
+    size=(950, None),          # max width, auto height
     method="caption",
     align="center",
 ).set_position(("center", "top")).set_duration(5).margin(top=120, opacity=0)
 
 clips.append(title)
 
-# Facts – auto-wrapped, perfectly centered, never cut off
+# Facts – auto-wrapped, centered, with fade in/out
 step = duration / 5
 
 for i, fact in enumerate(data["facts"]):
@@ -130,23 +130,17 @@ for i, fact in enumerate(data["facts"]):
         fact.upper(),
         fontsize=66,
         color="white",
-        font="Arial-Bold",
+        font="DejaVu-Sans-Bold",
         stroke_color="black",
         stroke_width=5,
-        size=(980, None),   # safe width
-        method="caption",   # auto line-breaks
+        size=(980, None),       # safe width inside 1080
+        method="caption",
         align="center",
-    )
-
-    fact_clip = (
-        fact_clip.set_position("center")
-        .set_start(5 + i * step)
-        .set_duration(step + 1.5)
-        .crossfadein(0.6)
-        .crossfadeout(0.6)
-    )
+    ).set_position("center").set_start(5 + i * step).set_duration(step + 1.5
+    ).crossfadein(0.6).crossfadeout(0.6)
 
     clips.append(fact_clip)
+
 
 # ====================== EXPORT ======================
 final = CompositeVideoClip(clips)   # no set_duration here
