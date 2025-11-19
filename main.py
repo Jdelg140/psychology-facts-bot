@@ -1,12 +1,9 @@
 import os
 import json
-import random
 import requests
 from gtts import gTTS
 from moviepy.editor import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip
 import google.generativeai as genai
-from PIL import Image
-Image.ANTIALIAS = Image.LANCZOS  # fixes Pillow 10+ error
 
 # ====================== CONFIG ======================
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
@@ -32,7 +29,7 @@ Topic: extremely surprising but real psychology facts."""
 model = genai.GenerativeModel("gemini-2.5-flash")
 response = model.generate_content(
     prompt,
-    generation_config=genai.types.GenerationConfig(
+    generation_config=genai.types.GenerativeConfig(
         response_mime_type="application/json",
         temperature=1.1
     )
@@ -58,24 +55,30 @@ queries = [
     "abstract lights slow motion"
 ]
 headers = {"Authorization": PEXELS_API_KEY}
-
+video_url = None # Initialize variable
 
 for q in queries:
     try:
         r = requests.get(f"https://api.pexels.com/videos/search?query={q}&per_page=15&orientation=portrait", headers=headers, timeout=10)
-        if r.status_code != 200:
-            continue
-        for v in r.json().get("videos", []):
-            files = v.get("video_files", [])
-            hd = [f for f in files if f.get("width", 0) >= 720]
-            if hd:
-                video_url = hd[0]["link"]
-                print(f"Using Pexels video: {video_url}")
+        
+        # Check for successful response and data
+        if r.status_code == 200 and r.json().get("videos"):
+            for v in r.json()["videos"]:
+                files = v.get("video_files", [])
+                hd = [f for f in files if f.get("width", 0) >= 720]
+                if hd:
+                    video_url = hd[0]["link"]
+                    print(f"Using Pexels video: {video_url}")
+                    break
+            if video_url:
                 break
-        if video_url:
-            break
-    except:
-        continue
+    except requests.RequestException as e:
+        # Catch network/request-specific errors
+        print(f"Pexels request failed for {q}: {e}")
+    except json.JSONDecodeError as e:
+        # Catch JSON parsing errors
+        print(f"Pexels response decoding failed for {q}: {e}")
+
 
 # 100% RELIABLE FALLBACK (hosted on GitHub — will never die)
 if not video_url:
@@ -96,6 +99,8 @@ bg = bg.resize(height=1920).crop(x_center=bg.w/2, width=1080).resize((1080, 1920
 
 clips = [bg.set_audio(audio)]
 
+TITLE_DURATION = 5.0 # Title appears for the first 5 seconds
+
 # Title — wrapped & safe
 title_clip = TextClip(
     data["title"].upper(),
@@ -107,12 +112,26 @@ title_clip = TextClip(
     size=(950, None),
     method="caption",
     align="center"
-).set_position(("center", 120)).set_duration(5)
+).set_position(("center", 120)).set_duration(TITLE_DURATION)
 clips.append(title_clip)
 
-# Facts — auto-wrapped, perfectly centered
-step = duration / 5
+# Facts — auto-wrapped, perfectly centered and timed
+FACT_COUNT = len(data["facts"])
+FACTS_TOTAL_TIME = duration - TITLE_DURATION
+fact_step = FACTS_TOTAL_TIME / FACT_COUNT
+
 for i, fact in enumerate(data["facts"]):
+    # Start time is after the title ends
+    start_time = TITLE_DURATION + i * fact_step
+    
+    # Duration for each fact clip
+    clip_duration = fact_step
+    
+    # Ensure the last clip's duration accounts for the total time
+    if i == FACT_COUNT - 1:
+        # The last clip ends exactly at 'duration'
+        clip_duration = duration - start_time
+        
     fact_clip = TextClip(
         fact.upper(),
         fontsize=66,
@@ -123,7 +142,7 @@ for i, fact in enumerate(data["facts"]):
         size=(980, None),
         method="caption",
         align="center"
-    ).set_position("center").set_start(5 + i * step).set_duration(step + 1.5
+    ).set_position("center").set_start(start_time).set_duration(clip_duration
     ).crossfadein(0.6).crossfadeout(0.6)
     clips.append(fact_clip)
 
