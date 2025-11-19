@@ -29,7 +29,7 @@ Topic: extremely surprising but real psychology facts."""
 model = genai.GenerativeModel("gemini-2.5-flash")
 response = model.generate_content(
     prompt,
-    generation_config=genai.types.GenerativeConfig(
+    generation_config=genai.types.GenerationConfig(
         response_mime_type="application/json",
         temperature=1.1
     )
