@@ -2,7 +2,7 @@ name: Daily Psychology Short
 
 on:
   schedule:
-    - cron: '0 10 * * *'  # Daily at 10 AM UTC
+    - cron: '0 10 * * *'
   workflow_dispatch:
 
 jobs:
@@ -16,29 +16,36 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install system dependencies
+      - name: Install system dependencies (FFmpeg + ImageMagick)
         run: |
-          sudo apt update
-          sudo apt install ffmpeg imagemagick -y
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg libsm6 libxext6 imagemagick
 
-      - name: Install Python dependencies
+      - name: Upgrade pip & install Python packages
         run: |
-          pip install google-generativeai gtts moviepy requests google-auth-oauthlib google-api-python-client google-auth
+          python -m pip install --upgrade pip
+          pip install --no-cache-dir \
+            google-generativeai \
+            gtts \
+            moviepy \
+            requests \
+            google-auth-oauthlib \
+            google-api-python-client \
+            google-auth
 
-      - name: Run generator
+      - name: Generate Short
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: python main.py
 
-      - name: Upload video as artifact
-        uses: actions/upload-artifact@v4  # v4 fixed
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: daily-psychology-short
+          name: daily-short
           path: |
             psychology_short.mp4
             metadata.txt
-          retention-days: 7
 
       - name: Auto-upload to YouTube
         env:
@@ -60,27 +67,14 @@ jobs:
           with open("metadata.txt") as f:
               lines = f.readlines()
               title = lines[0].replace("Title: ", "").strip()
-              description = lines[1].replace("Description: ", "").strip() + "\n" + "".join(lines[2:])
+              description = "\n".join(lines[1:]).replace("Description: ", "", 1).strip()
 
-          request_body = {
-              "snippet": {
-                  "title": title,
-                  "description": description,
-                  "tags": ["psychology", "facts", "shorts", "mindblown", "selfimprovement", "viral"],
-                  "categoryId": "24"
-              },
-              "status": {
-                  "privacyStatus": "public",
-                  "selfDeclaredMadeForKids": False
-              }
+          body = {
+              "snippet": {"title": title, "description": description, "tags": ["psychology","facts","shorts"], "categoryId": "24"},
+              "status": {"privacyStatus": "public", "selfDeclaredMadeForKids": False}
           }
 
-          media = MediaFileUpload("psychology_short.mp4", chunksize=-1, resumable=True)
-          response = youtube.videos().insert(
-              part="snippet,status",
-              body=request_body,
-              media_body=media
-          ).execute()
-
-          print(f"Uploaded! https://youtube.com/shorts/{response['id']}")
+          media = MediaFileUpload("psychology_short.mp4", resumable=True)
+          response = youtube.videos().insert(part="snippet,status", body=body, media_body=media).execute()
+          print(f"Uploaded → https://youtube.com/shorts/{response['id']}")
           PY
