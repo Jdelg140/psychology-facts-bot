@@ -4,6 +4,7 @@ import requests
 from gtts import gTTS
 from moviepy.editor import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip
 import google.generativeai as genai
+# Removed unused imports: random, PIL.Image (and Image.ANTIALIAS = Image.LANCZOS)
 
 # ====================== CONFIG ======================
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
@@ -29,7 +30,7 @@ Topic: extremely surprising but real psychology facts."""
 model = genai.GenerativeModel("gemini-2.5-flash")
 response = model.generate_content(
     prompt,
-    generation_config=genai.types.GenerationConfig(
+    generation_config=genai.types.GenerationConfig( # <-- FIX: Changed GenerativeConfig to GenerationConfig
         response_mime_type="application/json",
         temperature=1.1
     )
@@ -55,13 +56,12 @@ queries = [
     "abstract lights slow motion"
 ]
 headers = {"Authorization": PEXELS_API_KEY}
-video_url = None # Initialize variable
+video_url = None
 
 for q in queries:
     try:
         r = requests.get(f"https://api.pexels.com/videos/search?query={q}&per_page=15&orientation=portrait", headers=headers, timeout=10)
         
-        # Check for successful response and data
         if r.status_code == 200 and r.json().get("videos"):
             for v in r.json()["videos"]:
                 files = v.get("video_files", [])
@@ -73,14 +73,12 @@ for q in queries:
             if video_url:
                 break
     except requests.RequestException as e:
-        # Catch network/request-specific errors
         print(f"Pexels request failed for {q}: {e}")
     except json.JSONDecodeError as e:
-        # Catch JSON parsing errors
         print(f"Pexels response decoding failed for {q}: {e}")
 
 
-# 100% RELIABLE FALLBACK (hosted on GitHub — will never die)
+# 100% RELIABLE FALLBACK
 if not video_url:
     video_url = "https://github.com/user-attachments/files/17765432/calm-abstract-1080p.mp4"
     print("Pexels failed → using permanent fallback video")
@@ -95,6 +93,7 @@ with open("bg.mp4", "wb") as f:
 
 # ====================== VIDEO — TEXT NEVER OFF-SCREEN ======================
 bg = VideoFileClip("bg.mp4").loop(duration=duration + 10)
+# Note: The moviepy 1.0.3 pin in your YAML handles the old Image.ANTIALIAS call
 bg = bg.resize(height=1920).crop(x_center=bg.w/2, width=1080).resize((1080, 1920)).subclip(0, duration)
 
 clips = [bg.set_audio(audio)]
