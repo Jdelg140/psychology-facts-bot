@@ -2,7 +2,7 @@ name: Daily Psychology Short
 
 on:
   schedule:
-    - cron: '0 10 * * *'
+    - cron: '0 10 * * *'  # Daily at 10 AM UTC
   workflow_dispatch:
 
 jobs:
@@ -30,6 +30,15 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: python main.py
+
+      - name: Upload video as artifact
+        uses: actions/upload-artifact@v4  # v4 fixed
+        with:
+          name: daily-psychology-short
+          path: |
+            psychology_short.mp4
+            metadata.txt
+          retention-days: 7
 
       - name: Auto-upload to YouTube
         env:
