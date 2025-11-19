@@ -1,29 +1,37 @@
-name: Daily Psychology Facts Short
+name: Daily Psychology Short
 
 on:
   schedule:
-    - cron: '0 12 * * *'  # Runs daily at 12 PM UTC
-  workflow_dispatch:  # Allows manual run
+    - cron: '0 10 * * *'  # Every day at 10 AM UTC
+  workflow_dispatch:
 
 jobs:
-  generate-and-upload:
+  generate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
+          python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install google-generativeai gtts moviepy requests
+        run: |
+          sudo apt update
+          sudo apt install ffmpeg imagemagick -y
+          pip install google-generativeai gtts moviepy requests
 
-      - name: Generate video
+      - name: Run generator
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: python main.py
 
-      - name: Upload to YouTube (requires YouTube credentials)
-        # Add upload step here (see below for code addition)
+      - name: Upload video as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: daily-psychology-short
+          path: |
+            psychology_short.mp4
+            metadata.txt
