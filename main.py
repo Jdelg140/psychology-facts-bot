@@ -58,7 +58,7 @@ queries = [
     "abstract lights slow motion"
 ]
 headers = {"Authorization": PEXELS_API_KEY}
-video_url = None
+
 
 for q in queries:
     try:
