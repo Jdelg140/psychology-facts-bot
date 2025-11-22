@@ -97,30 +97,52 @@ with open("bg.mp4", "wb") as f:
             f.write(chunk)
 
 # ====================== VIDEO (TEXT NEVER GOES OFF-SCREEN) ======================
-bg = VideoFileClip("bg.mp4").loop(duration=duration + 10)
-bg = (
-    bg.resize(height=1920)
-      .crop(x_center=bg.w / 2, width=1080)
-      .resize((1080, 1920))
-      .subclip(0, duration)
-)
+# ====================== VIDEO (TEXT NEVER GOES OFF-SCREEN) ======================
+bg = VideoFileClip("bg.mp4")
 
-clips = [bg.set_audio(audio)]
+# === SMART RESIZE THAT ACTUALLY SHOWS THE VIDEO ===
+bg = bg.resize(height=1920)                    # first make it tall
+if bg.w > 1080:                                # landscape → crop sides
+    bg = bg.crop(x_center=bg.w / 2, width=1080)
+else:                                          # portrait or square → add subtle blur bars
+    bg = bg.fx(vfx.colorx, 0.9).margin(left=80, right=80, color=(10,10,30)).resize(width=1080)
 
-# Title – wrapped, never off-screen
+bg = bg.resize((1080, 1920)).set_fps(30)
+bg = bg.loop(duration=duration+10).subclip(0, duration).set_audio(audio)
+
+clips = [bg]
+
+# === Rest of your text clips (unchanged) ===
 title = TextClip(
     data["title"].upper(),
     fontsize=82,
     color="white",
-    font="DejaVu-Sans-Bold",   # reliable on Ubuntu after fonts-dejavu-core
+    font="DejaVu-Sans-Bold",
     stroke_color="black",
     stroke_width=6,
-    size=(950, None),          # max width, auto height
+    size=(950, None),
     method="caption",
     align="center",
 ).set_position(("center", "top")).set_duration(5).margin(top=120, opacity=0)
-
 clips.append(title)
+
+step = duration / 5
+for i, fact in enumerate(data["facts"]):
+    fact_clip = TextClip(
+        fact.upper(),
+        fontsize=66,
+        color="white",
+        font="DejaVu-Sans-Bold",
+        stroke_color="black",
+        stroke_width=5,
+        size=(980, None),
+        method="caption",
+        align="center",
+    ).set_position("center")\
+     .set_start(5 + i * step)\
+     .set_duration(step + 1.5)\
+     .crossfadein(0.6).crossfadeout(0.6)
+    clips.append(fact_clip)
 
 # Facts – auto-wrapped, centered, with fade in/out
 step = duration / 5
