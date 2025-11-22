@@ -2,7 +2,7 @@ import os
 import json
 import requests
 from gtts import gTTS
-from moviepy.editor import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip
+from moviepy.editor import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, vfx
 import google.generativeai as genai
 from PIL import Image
 
