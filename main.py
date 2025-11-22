@@ -2,6 +2,7 @@ import os
 import json
 import requests
 from gtts import gTTS
+import pathlib
 from moviepy.editor import (
 VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip, vfx
 )
