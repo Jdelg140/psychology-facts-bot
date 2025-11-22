@@ -19,7 +19,7 @@ prompt = """Return ONLY valid JSON (no markdown, no extra text) with this exact 
 {
   "title": "5 Psychology Facts That Will Shock You",
   "description": "Daily mind-blowing psychology facts!\\n\\n#psychology #facts #shorts",
-  "narration": "Strong hook + exactly 5 real, surprising psychology facts with short explanations. 130–160 words total. End with: Which fact shocked you the most? Comment below and subscribe for daily facts!",
+  "narration": "Strong hook + exactly 5 new, real, surprising psychology facts with short explanations. 100–120 words total. End with: Which fact shocked you the most? Comment below and subscribe for daily facts!",
   "facts": [
     "Fact 1 – max 18 words",
     "Fact 2 – max 18 words",
